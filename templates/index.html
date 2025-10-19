@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Recommender</a>
+        <a href="/catalog">Movie Catalog</a>
+        <a href="/top_movies">Top Movies</a>
+        <a href="/about">About</a>
+    </div>
+
+    <div class="container container-sm">
+        <h1>🎬 Movie Recommender</h1>
+        <form action="/recommend" method="post">
+            <input type="text" name="movie_title" placeholder="Enter a movie title (e.g., Avenger)" required>
+            <button type="submit">Recommend</button>
+        </form>
+
+        <div class="results">
+            {% if matches %}
+                <h3>Did you mean one of these?</h3>
+                <ul>
+                    {% for movie in matches %}
+                        <li class="choice-item">
+                           <form action="/recommend" method="post" style="display:inline;">
+                               <input type="hidden" name="movie_title" value="{{ movie }}">
+                               <button type="submit">{{ movie }}</button>
+                           </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if recommendations %}
+                <h3>Recommendations for "{{ movie_title }}":</h3>
+                <ul>
+                    {% for movie in recommendations %}
+                        <li>{{ movie }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
