@@ -30,22 +30,30 @@ git clone https://github.com/MichaelFirstAC/MovieCatalog.git
 
 2. Install Dependencies Install the required Python libraries using pip:
 
-```pip install flask pandas scikit-learn```
+```
+pip install flask pandas scikit-learn
+```
 
 3. Prepare the Data and Model (One-Time Setup) The application requires the raw CSV files (```tmdb_5000_movies.csv``` and ```tmdb_5000_credits.csv```) to be present in the root directory. To do this, simply extract the ```archive.zip``` file and have it present on the repository.
 
 Run the ```prepare_model.py``` script once. This script will read the raw data, perform all necessary cleaning and feature engineering, build the similarity model, and save the processed files (```movies.pkl``` and ```cosine_sim.pkl```).
 
-```python prepare_model.py```
+```
+python prepare_model.py
+```
 
 4. Run the Web Application Once the model files are generated, you can start the Flask server:
 
-```python app.py```
+```
+python app.py
+```
 
 You should see output in your terminal indicating that the server is running, typically on http://127.0.0.1:5000/.
 
 5. Access the Application Open your web browser and navigate to:
 
-```http://127.0.0.1:5000/```
+```
+http://127.0.0.1:5000/
+```
 
 You can now use the recommender or navigate to the "Movie Catalog" to browse the full list.
