@@ -4,21 +4,21 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import json
 
-# --- 1. Load and Build Content-Based Model (Your Original Code) ---
+# --- 1. Load and Build Content-Based Model ---
 print("Building Hybrid Content-Quality Model...")
 
-# --- Load and prepare the original data (same as your notebook) ---
+# --- Load and prepare the original data ---
 movies_df = pd.read_csv('tmdb_5000_movies.csv')
 credits_df = pd.read_csv('tmdb_5000_credits.csv')
 df = movies_df.merge(credits_df, left_on='id', right_on='movie_id')
 
-# --- MODIFICATION: Add 'vote_average' and 'vote_count' for quality score ---
+# --- Add 'vote_average' and 'vote_count' for quality score ---
 recommender_df = df[['movie_id', 'title_x', 'overview', 'genres', 'keywords',
                      'cast', 'crew', 'vote_average', 'vote_count']].copy()
 recommender_df.rename(columns={'title_x': 'title'}, inplace=True)
 
 
-# --- Feature engineering functions (same as your notebook) ---
+# --- Feature engineering functions ---
 def parse_json_list(text, key='name'):
     try:
         items = json.loads(text)
@@ -102,4 +102,5 @@ pickle.dump(cosine_sim, open('cosine_sim.pkl', 'wb'))
 print("  - cosine_sim.pkl (Weighted content model) saved.")
 
 print("\n✅ All models and data saved successfully!")
+
 
