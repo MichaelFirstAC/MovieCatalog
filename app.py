@@ -16,10 +16,7 @@ for genre_list in movies['genres']:
     #sort alphabetically
 ALL_GENRES_LIST = sorted(list(all_genres_set))
 
-# --- REMOVED: Normalization and ALPHA/BETA weights ---
-
-
-# --- NEW: Store all HTML in a Python string ---
+# --- Store all HTML in a Python string ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -180,7 +177,7 @@ def home():
         )
 
 
-# --- NEW: Route for browsing by genre ---
+# --- Route for browsing by genre ---
 @app.route('/genre/<name>')
 def browse_genre(name):
     try:
@@ -202,7 +199,7 @@ def browse_genre(name):
         #    This shows the "best" movies in that genre first
         top_genre_movies = genre_movies.sort_values('quality_score', ascending=False).head(20)
 
-        # --- MODIFIED: Return full data for cards ---
+        # --- Return full data for cards ---
         recommendations_data = []
         for _, movie in top_genre_movies.iterrows():
             recommendations_data.append({
@@ -230,8 +227,6 @@ def browse_genre(name):
 def recommend():
     user_input = request.form.get('movie_title')
 
-    # --- SMARTER SEARCH LOGIC ---
-
     # 1. Perform a case-insensitive partial search for the movie
     matching_movies = movies[movies['title'].str.contains(user_input, case=False)]
 
@@ -239,12 +234,12 @@ def recommend():
     if matching_movies.empty:
         # Case A: No movies found
         error_message = f"No movies found matching '{user_input}'. Please try another title."
-        # --- MODIFIED: Use render_template_string ---
+        # --- Use render_template_string ---
         return render_template_string(HTML_TEMPLATE, error=error_message, all_genres=ALL_GENRES_LIST)
 
     elif len(matching_movies) > 1:
         # Case B: Multiple movies found, ask the user to choose
-        # --- MODIFIED: Use render_template_string ---
+        # --- Use render_template_string ---
         return render_template_string(HTML_TEMPLATE, matches=matching_movies['title'].tolist(),
                                       all_genres=ALL_GENRES_LIST)
 
@@ -255,7 +250,7 @@ def recommend():
             exact_title = matching_movies.iloc[0]['title']
             idx = movies[movies['title'] == exact_title].index[0]
 
-            # --- MODIFIED: Classic Content-Based Logic WITH EXPLAINABILITY ---
+            # --- Classic Content-Based Logic WITH EXPLAINABILITY ---
 
             # 1. Get similarity scores
             sim_scores = list(enumerate(cosine_sim[idx]))
@@ -302,7 +297,7 @@ def recommend():
                 })
 
             # Pass the rich data (not just titles) to the template
-            # --- MODIFIED: Use render_template_string ---
+            # --- Use render_template_string ---
             return render_template_string(
                 HTML_TEMPLATE,
                 recommendations_data=recommendations_data,
@@ -312,12 +307,13 @@ def recommend():
 
         except Exception as e:
             # General error handling
-            # --- MODIFIED: Use render_template_string ---
+            # --- Use render_template_string ---
             return render_template_string(HTML_TEMPLATE, error=f"An error occurred: {e}", all_genres=ALL_GENRES_LIST)
 
 
-# This allows you to run the app from the command line
+# This allows to run the app from the command line
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
