@@ -36,11 +36,13 @@ def get_director(text):
     except:
         return []
 
-
+# This function will now be called inside create_weighted_soup
 def clean_spaces(item_list):
     return [str(item).replace(' ', '').lower() for item in item_list]
 
 
+# --- MODIFIED LOOP ---
+# This loop now parses the data but keeps the original pretty names
 for feature in ['genres', 'keywords', 'cast', 'director']:
     if feature == 'cast':
         recommender_df[feature] = recommender_df[feature].apply(lambda x: parse_json_list(x)[:3])
@@ -48,7 +50,10 @@ for feature in ['genres', 'keywords', 'cast', 'director']:
         recommender_df[feature] = recommender_df['crew'].apply(get_director)
     else:
         recommender_df[feature] = recommender_df[feature].apply(parse_json_list)
-    recommender_df[feature] = recommender_df[feature].apply(clean_spaces)
+    
+    # We NO LONGER call clean_spaces() here.
+    # recommender_df[feature] = recommender_df[feature].apply(clean_spaces)
+
 
 # Use Bayesian average to compare based in ratings
 C = recommender_df['vote_average'].mean()
@@ -68,12 +73,14 @@ def calculate_bayesian_avg(x, m=m, C=C):
 recommender_df['quality_score'] = recommender_df.apply(calculate_bayesian_avg, axis=1)
 
 
+# --- MODIFIED SOUP FUNCTION ---
 #Weighted Soup (Director --> cast --> keywords, genre)
 def create_weighted_soup(x):
-    director_soup = ' '.join(x['director']) * 3
-    cast_soup = ' '.join(x['cast']) * 2
-    keywords_soup = ' '.join(x['keywords'])
-    genres_soup = ' '.join(x['genres'])
+    # We call clean_spaces() HERE, so it only affects the soup, not the dataframe
+    director_soup = ' '.join(clean_spaces(x['director'])) * 3
+    cast_soup = ' '.join(clean_spaces(x['cast'])) * 2
+    keywords_soup = ' '.join(clean_spaces(x['keywords']))
+    genres_soup = ' '.join(clean_spaces(x['genres']))
 
     return f"{director_soup} {cast_soup} {keywords_soup} {genres_soup}"
 
@@ -83,6 +90,7 @@ recommender_df['soup'] = recommender_df.apply(create_weighted_soup, axis=1)
 
 # --- 4. Build the Content-Similarity Model ---
 tfidf = TfidfVectorizer(stop_words='english')
+# The tfidf_matrix is built from the 'soup' column, which has the cleaned names
 tfidf_matrix = tfidf.fit_transform(recommender_df['soup'])
 
 # This cosine_sim is now based on our *weighted* soup
@@ -93,14 +101,12 @@ print("✅ Weighted Content-Based Model built.")
 # --- 5. Save ALL models to files ---
 print("\nSaving all models to .pkl files...")
 
-# 'movies.pkl' now contains the 'quality_score', which is crucial!
+# 'movies.pkl' now contains the 'quality_score' AND the pretty names
 pickle.dump(recommender_df, open('movies.pkl', 'wb'))
 print("  - movies.pkl (Content data + Quality Score) saved.")
 
-# 'cosine_sim.pkl' is now the *weighted* similarity model
+# 'cosine_sim.pkl' is the weighted similarity model
 pickle.dump(cosine_sim, open('cosine_sim.pkl', 'wb'))
 print("  - cosine_sim.pkl (Weighted content model) saved.")
 
 print("\n✅ All models and data saved successfully!")
-
-
