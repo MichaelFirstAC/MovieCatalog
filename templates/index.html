@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Recommender</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         .genre-button { transition: all 0.2s ease; }
         .movie-card-title { transition: all 0.2s ease; }
@@ -23,19 +21,17 @@
     <div class="max-w-3xl mx-auto">
 
         <div class="text-center mb-8">
-            
             <a href="{% if page_context == 'catalog' %}/catalog{% elif page_context == 'top100' %}/top100{% else %}/{% endif %}">
                 <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
-                    
                     {% if page_context == 'catalog' %}
                         Movie Catalog
                     {% elif page_context == 'top100' %}
                         Top 100 Movies
-                    {% else %} Movie Recommender
+                    {% else %}
+                        Movie Recommender
                     {% endif %}
                 </h1>
             </a>
-            
             <p class="text-lg text-gray-400">
                 {% if page_context == 'catalog' %}
                     Browse all movies in our collection, sorted by quality.
@@ -46,7 +42,7 @@
                 {% endif %}
             </p>
         </div>
-        
+
         {% if page_context not in ['catalog', 'top100'] %}
         <div class="mb-8">
             <h2 class="text-2xl font-bold mb-4 text-center">Search by Title</h2>
@@ -64,13 +60,15 @@
                 </div>
             </form>
         </div>
-        {% endif %} {% if all_genres %}
+        {% endif %}
+
+
+        {% if all_genres %}
         <div class="mb-8">
             <h2 class="text-2xl font-bold mb-4 text-center">Or Browse by Genre</h2>
             <div class="flex flex-wrap justify-center gap-2">
                 
                 {% for genre in all_genres %}
-                
                     {% if page_context == 'catalog' %}
                         <a href="/catalog/genre/{{ genre }}"
                            class="genre-button bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-3 rounded-md transition duration-200">
@@ -89,9 +87,14 @@
                             {{ genre.capitalize() }}
                         </a>
                     {% endif %}
-                {% endfor %} </div>
+                {% endfor %}
+
+            </div>
         </div>
-        {% endif %} {% if error %}
+        {% endif %}
+
+
+        {% if error %}
             <div class="bg-red-800 border border-red-700 text-red-100 px-4 py-3 rounded-md mb-6" role="alert">
                 <strong class="font-bold">Oops!</strong>
                 <span class="block sm:inline">{{ error }}</span>
@@ -147,7 +150,6 @@
                 <div class="space-y-4">
                     {% for movie in recommendations_data %}
                         <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
-                            
                             <form action="/recommend" method="POST" class="mb-2">
                                 <input type="hidden" name="source_context" value="{{ page_context | default('home') }}">
                                 <button type="submit" name="movie_title" value="{{ movie.title }}" 
@@ -156,15 +158,55 @@
                                 </button>
                             </form>
                             
-                            <p class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block mb-3">
-                                {{ movie.reason }}
-                            </p>
-                            
+                            <div class="flex flex-wrap gap-2 items-center mb-3">
+                
+                                {% if movie.reason %}
+                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
+                                        {{ movie.reason }}
+                                    </span>
+                                {% endif %}
+                
+                                {% if movie.reason_director %}
+                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
+                                        Director: {{ movie.reason_director | join(', ') }}
+                                    </span>
+                                {% endif %}
+                                
+                                {% if movie.reason_cast %}
+                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
+                                        Cast: {{ movie.reason_cast | join(', ') }}
+                                    </span>
+                                {% endif %}
+                
+                                {% if movie.reason_genres %}
+                                    {% for genre in movie.reason_genres %}
+                                        {% if page_context == 'catalog' %}
+                                            <a href="/catalog/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
+                                                Genre: {{ genre.capitalize() }}
+                                            </a>
+                                        {% elif page_context == 'top100' %}
+                                            <a href="/top100/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
+                                                Genre: {{ genre.capitalize() }}
+                                            </a>
+                                        {% else %} <a href="/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
+                                                Genre: {{ genre.capitalize() }}
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if movie.reason_fallback %}
+                                     <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
+                                        Similar keywords or plot.
+                                    </span>
+                                {% endif %}
+                            </div>
                             <p class="text-gray-400 text-sm">
                                 {{ movie.overview[:250] }}{% if movie.overview|length > 250 %}...{% endif %}
                             </p>
                         </div>
-                    {% endfor %} </div>
+                    {% endfor %}
+                </div>
             </div>
             
             {% if total_pages %}
@@ -197,5 +239,10 @@
                 {% endif %}
                 
             </div>
-            {% endif %} {% endif %} </div> </body>
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+</body>
 </html>

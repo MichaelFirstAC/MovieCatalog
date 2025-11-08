@@ -34,6 +34,7 @@ def home():
         # Format the data for the template
         recommendations_data = []
         for _, movie in top_20.iterrows():
+            # For list pages, the "reason" is just the quality score
             recommendations_data.append({
                 'title': movie['title'],
                 'overview': movie['overview'],
@@ -311,11 +312,10 @@ def recommend():
 
     # --- Smarter Search Logic ---
     # 1. Try for a direct, case-insensitive match first.
-    # This fixes the "Unleashed" bug where clicking a button leads back to the same page.
     exact_matches = movies[movies['title'].str.lower() == user_input.lower()]
 
     if len(exact_matches) == 1:
-        # Case 1: Perfect match found. Proceed directly to recommendations.
+        # Case 1: Perfect match found.
         matching_movies = exact_matches
     
     elif len(exact_matches) > 1:
@@ -337,9 +337,8 @@ def recommend():
             return render_template('index.html', matches=matching_movies['title'].tolist(),
                                           all_genres=ALL_GENRES_LIST, page_context=source_context)
         
-        # Case 3c: Exactly one partial match found. Proceed to recommendations.
-        # 'matching_movies' is now set, and the code will flow to 'Case C' below.
-
+        # Case 3c: Exactly one partial match found.
+        
     # --- Case C: Success (Exactly one movie was found) ---
     try:
         # Get the exact title and index of the matched movie
@@ -365,54 +364,42 @@ def recommend():
         }
 
         # --- Get Similarity Scores ---
-        # Get the similarity scores for this movie against all other movies
         sim_scores = list(enumerate(cosine_sim[idx]))
-        # Sort by score (descending)
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        # Get the top 10, skipping [0] (which is the movie itself)
         sim_scores = sim_scores[1:11]
-        # Get the indices of the top 10 movies
         movie_indices = [i[0] for i in sim_scores]
         
         # --- Build Recommendation List with Explanations ---
         recommendations_data = []
         for i in movie_indices:
             rec_movie = movies.iloc[i]
-            reasons = [] # To store "why" it's recommended
-
-            # Find common features between source and recommended movie
+            
+            # Find common features as lists
             common_director = list(source_features['director'].intersection(set(rec_movie['director'])))
-            if common_director:
-                reasons.append(f"Director: {', '.join(common_director)}")
-
             common_cast = list(source_features['cast'].intersection(set(rec_movie['cast'])))
-            if common_cast:
-                reasons.append(f"Cast: {', '.join(common_cast)}")
-
             common_genres = list(source_features['genres'].intersection(set(rec_movie['genres'])))
-            if common_genres:
-                reasons.append(f"Genre: {', '.join(common_genres)}")
 
-            # Create the final reason string
-            final_reason = " | ".join(reasons)
-            if not final_reason:
-                final_reason = "Similar keywords or plot." # Fallback
+            # Check if we found any common features at all
+            has_reasons = any([common_director, common_cast, common_genres])
 
-            # Add the recommended movie to our list
+            # Instead of one 'reason' string, pass separate keys to the template.
+            # This gives the HTML template more control over how to display them.
             recommendations_data.append({
                 'title': rec_movie['title'],
                 'overview': rec_movie['overview'],
-                'reason': final_reason
+                'reason_director': common_director, # Pass the list of common directors
+                'reason_cast': common_cast,     # Pass the list of common cast members
+                'reason_genres': common_genres,   # Pass the list of common genres (for clickable links)
+                'reason_fallback': not has_reasons # True if no reasons were found
             })
         
-        # Render the template, passing both the source movie's details
-        # and the new list of recommendations.
+        # Render the template
         return render_template(
             'index.html',
             source_movie_details=source_movie_details,
             recommendations_data=recommendations_data,
             all_genres=ALL_GENRES_LIST,
-            page_context=source_context  # <-- Pass the *original* context back
+            page_context=source_context  # Pass the *original* context back
         )
 
     except Exception as e:
