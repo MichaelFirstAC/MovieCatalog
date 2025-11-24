@@ -6,243 +6,375 @@
     <title>Movie Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .genre-button { transition: all 0.2s ease; }
-        .movie-card-title { transition: all 0.2s ease; }
+        /* Smooth fade in */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Smooth transition for the dropdown */
+        #genreFilterMenu { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 min-h-screen font-sans p-4 md:p-8">
+<body class="bg-gradient-to-br from-gray-900 to-indigo-900 min-h-screen text-gray-100 font-sans">
 
-    <nav class="max-w-3xl mx-auto mb-8 p-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg flex justify-center space-x-8">
-        <a href="/" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Home</a>
-        <a href="/catalog" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Movie Catalog</a>
-        <a href="/top100" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Top 100</a>
-    </nav>
-
-    <div class="max-w-3xl mx-auto">
-
-        <div class="text-center mb-8">
-            <a href="{% if page_context == 'catalog' %}/catalog{% elif page_context == 'top100' %}/top100{% else %}/{% endif %}">
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
-                    {% if page_context == 'catalog' %}
-                        Movie Catalog
-                    {% elif page_context == 'top100' %}
-                        Top 100 Movies
-                    {% else %}
-                        Movie Recommender
-                    {% endif %}
-                </h1>
+    <header class="bg-gray-800 shadow-lg sticky top-0 z-50 border-b border-indigo-900">
+        <nav class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center">
+            <a href="/" class="text-3xl font-bold text-white hover:text-indigo-300 transition">
+                <span class="text-indigo-400">Movie</span>Recommender
             </a>
-            <p class="text-lg text-gray-400">
-                {% if page_context == 'catalog' %}
-                    Browse all movies in our collection, sorted by quality.
-                {% elif page_context == 'top100' %}
-                    The 100 highest-rated movies in the dataset.
-                {% else %}
-                    Find movies similar to your favorites.
-                {% endif %}
-            </p>
-        </div>
-
-        {% if page_context not in ['catalog', 'top100'] %}
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-center">Search by Title</h2>
-            <form action="/recommend" method="POST">
-                <input type="hidden" name="source_context" value="{{ page_context | default('home') }}">
-                <label for="movie_title" class="block text-sm font-medium text-gray-400 mb-2">Enter a movie title:</label>
-                <div class="flex">
-                    <input type="text" name="movie_title" id="movie_title"
-                        class="flex-grow bg-gray-800 border border-gray-700 text-white rounded-l-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., The Dark Knight">
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-r-md transition duration-200">
-                        Recommend
-                    </button>
-                </div>
-            </form>
-        </div>
-        {% endif %}
-
-
-        {% if all_genres %}
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-center">Or Browse by Genre</h2>
-            <div class="flex flex-wrap justify-center gap-2">
-                
-                {% for genre in all_genres %}
-                    {% if page_context == 'catalog' %}
-                        <a href="/catalog/genre/{{ genre }}"
-                           class="genre-button bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-3 rounded-md transition duration-200">
-                            {{ genre.capitalize() }}
-                        </a>
-                    
-                    {% elif page_context == 'top100' %}
-                        <a href="/top100/genre/{{ genre }}"
-                           class="genre-button bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-3 rounded-md transition duration-200">
-                            {{ genre.capitalize() }}
-                        </a>
-
-                    {% else %}
-                        <a href="/genre/{{ genre }}"
-                           class="genre-button bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-3 rounded-md transition duration-200">
-                            {{ genre.capitalize() }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-
-            </div>
-        </div>
-        {% endif %}
-
-
-        {% if error %}
-            <div class="bg-red-800 border border-red-700 text-red-100 px-4 py-3 rounded-md mb-6" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">{{ error }}</span>
-            </div>
-        {% endif %}
-
-        {% if matches %}
-            <div class="bg-gray-800 border border-gray-700 p-4 rounded-md mb-6">
-                <h3 class="font-bold text-lg mb-3">Did you mean one of these?</h3>
-                <form action="/recommend" method="POST" class="flex flex-wrap gap-2">
-                    <input type="hidden" name="source_context" value="{{ page_context | default('home') }}">
-                    
-                    {% for title in matches %}
-                        <button type="submit" name="movie_title" value="{{ title }}"
-                            class="bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2 px-3 rounded-md transition duration-200">
-                            {{ title }}
-                        </button>
-                    {% endfor %}
-                </form>
-            </div>
-        {% endif %}
-
-        {% if source_movie_details %}
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold mb-4 text-blue-400">{{ source_movie_details.title }}</h2>
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg mb-6">
-                <h3 class="text-xl font-semibold mb-3 text-gray-200">Overview</h3>
-                <p class="text-gray-400 text-base mb-4">
-                    {{ source_movie_details.overview }}
-                </p>
-                <h3 class="text-xl font-semibold mb-3 text-gray-200">Details</h3>
-                <ul class="text-gray-400 text-sm list-none space-y-2">
-                    <li><strong>Director:</strong> {{ source_movie_details.director }}</li>
-                    <li><strong>Starring:</strong> {{ source_movie_details.cast }}</li>
-                    <li><strong>Genres:</strong> {{ source_movie_details.genres }}</li>
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-
-
-        {% if recommendations_data %}
-            <div class="mb-8">
-                
-                {% if source_movie_details %}
-                    <h2 class="text-2xl font-bold mb-4">Recommended Movies</h2>
-                {% elif genre_name %}
-                    <h2 class="text-2xl font-bold mb-4">Top 20 <span class="text-blue-400">{{ genre_name.capitalize() }}</span> Movies</h2>
-                {% elif list_title %}
-                    <h2 class="text-2xl font-bold mb-4 text-center">{{ list_title }}</h2>
-                {% endif %}
-
-                <div class="space-y-4">
-                    {% for movie in recommendations_data %}
-                        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
-                            <form action="/recommend" method="POST" class="mb-2">
-                                <input type="hidden" name="source_context" value="{{ page_context | default('home') }}">
-                                <button type="submit" name="movie_title" value="{{ movie.title }}" 
-                                        class="movie-card-title text-xl font-bold text-blue-400 hover:text-blue-300 hover:underline transition duration-200 text-left w-full">
-                                    {{ movie.title }}
-                                </button>
-                            </form>
-                            
-                            <div class="flex flex-wrap gap-2 items-center mb-3">
-                
-                                {% if movie.reason %}
-                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
-                                        {{ movie.reason }}
-                                    </span>
-                                {% endif %}
-                
-                                {% if movie.reason_director %}
-                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
-                                        Director: {{ movie.reason_director | join(', ') }}
-                                    </span>
-                                {% endif %}
-                                
-                                {% if movie.reason_cast %}
-                                    <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
-                                        Cast: {{ movie.reason_cast | join(', ') }}
-                                    </span>
-                                {% endif %}
-                
-                                {% if movie.reason_genres %}
-                                    {% for genre in movie.reason_genres %}
-                                        {% if page_context == 'catalog' %}
-                                            <a href="/catalog/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
-                                                Genre: {{ genre.capitalize() }}
-                                            </a>
-                                        {% elif page_context == 'top100' %}
-                                            <a href="/top100/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
-                                                Genre: {{ genre.capitalize() }}
-                                            </a>
-                                        {% else %} <a href="/genre/{{ genre }}" class="text-sm font-medium text-blue-300 bg-gray-700 px-2 py-1 rounded-md inline-block hover:bg-gray-600 hover:underline">
-                                                Genre: {{ genre.capitalize() }}
-                                            </a>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                                
-                                {% if movie.reason_fallback %}
-                                     <span class="text-sm font-medium text-purple-300 bg-gray-700 px-2 py-1 rounded-md inline-block">
-                                        Similar keywords or plot.
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <p class="text-gray-400 text-sm">
-                                {{ movie.overview[:250] }}{% if movie.overview|length > 250 %}...{% endif %}
-                            </p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
             
-            {% if total_pages %}
-            <div class="flex justify-between items-center mt-8">
+            <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                <a href="/" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Home</a>
+                <a href="/catalog" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Catalog</a>
+                <a href="/browse" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Browse Star</a>
+                <a href="/about" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">About</a>
+                <a href="/surprise" class="text-indigo-400 hover:text-white font-bold transition-colors">Surprise Me!</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 fade-in">
+
+        {% if page_context == 'about' %}
+            <div class="max-w-4xl mx-auto space-y-8">
                 
-                {% if current_page > 1 %}
-                    <a href="{{ pagination_base_url }}?page={{ current_page - 1 }}"
-                       class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                        &larr; Previous
-                    </a>
-                {% else %}
-                    <span class="bg-gray-700 text-gray-500 font-bold py-2 px-4 rounded-md cursor-not-allowed">
-                        &larr; Previous
-                    </span>
+                <section class="bg-gray-800 p-8 rounded-lg shadow-xl border-l-4 border-indigo-500">
+                    <h1 class="text-4xl font-extrabold text-indigo-300 mb-6">About This Project</h1>
+                    <p class="text-gray-300 mb-4 text-lg leading-relaxed">
+                        This project solves the "cold-start" problem in movie recommendation. By analyzing metadata (Directors, Cast, Genres), 
+                        we use a <strong>Weighted Content-Based</strong> approach to find semantic similarities without needing user history.
+                    </p>
+                </section>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                         <h2 class="text-2xl font-bold text-white mb-4">Tech Stack</h2>
+                        <ul class="list-disc list-inside text-gray-400 space-y-2">
+                            <li>Flask (Web Framework)</li>
+                            <li>Pandas & Scikit-Learn (Data & ML)</li>
+                            <li>TF-IDF & Cosine Similarity (Algorithms)</li>
+                            <li>Tailwind CSS (Styling)</li>
+                        </ul>
+                    </section>
+                    <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                        <h2 class="text-2xl font-bold text-white mb-4">Features</h2>
+                        <ul class="list-disc list-inside text-gray-400 space-y-2">
+                            <li>Bayesian Quality Scoring</li>
+                            <li>Weighted "Soup" Vectorization</li>
+                            <li>Catalog Pagination</li>
+                            <li>Director/Actor Browsing</li>
+                        </ul>
+                    </section>
+                </div>
+
+                <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                    <h2 class="text-3xl font-bold text-white mb-8 text-center">Meet the Team</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/michael.jpeg') }}" alt="Michael Arianno" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">MichaelFirstAC</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">System Architect & Backend Lead</p>
+                        </div>
+
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/timothy.jpeg') }}" alt="Timothy Immanuel" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Timotimanuel12</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist & UI/UX Designer</p>
+                        </div>
+
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/harris.jpeg') }}" alt="Harris Ekaputra" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">HES2209</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Feature Developer & Documenter</p>
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+
+        {% elif page_context == 'browse' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Browse by Star</h1>
+                <p class="text-xl text-gray-300">Enter an actor or director to see their best work.</p>
+            </section>
+            <section class="mb-12 bg-gray-800 p-8 rounded-lg shadow-xl max-w-4xl mx-auto">
+                <form action="/browse" method="post" class="flex flex-col md:flex-row gap-4 justify-center mb-10">
+                    <input type="text" name="person_name"
+                        class="w-full md:w-2/3 px-5 py-3 text-gray-900 bg-gray-200 border-2 border-transparent rounded-lg focus:outline-none focus:border-indigo-400 text-lg placeholder-gray-500"
+                        placeholder="e.g. Christopher Nolan, Brad Pitt" required>
+                    <button type="submit"
+                        class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none transition-colors duration-200 text-lg shadow-lg">
+                        Search
+                    </button>
+                </form>
+
+                {% if popular_actors and popular_directors %}
+                <div class="grid md:grid-cols-2 gap-8 border-t border-gray-700 pt-8">
+                    <div class="text-center">
+                        <h3 class="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider">Popular Directors</h3>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            {% for person in popular_directors %}
+                            <a href="/browse?person_name={{ person }}"
+                               class="px-3 py-1.5 bg-gray-900 text-indigo-400 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ person }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <h3 class="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider">Popular Actors</h3>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            {% for person in popular_actors %}
+                            <a href="/browse?person_name={{ person }}"
+                               class="px-3 py-1.5 bg-gray-900 text-indigo-400 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ person }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+
+        {% elif page_context == 'catalog' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Movie Catalog</h1>
+                <p class="text-xl text-gray-300">Browse and filter through our complete library of films.</p>
+            </section>
+
+        {% elif page_context == 'surprise' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-purple-400">Surprise Recommendation</h1>
+                <p class="text-xl text-gray-300">We picked this high-rated gem just for you.</p>
+            </section>
+
+        {% else %}
+            
+            {% if page_context == 'home' or (source_movie_details and page_context != 'surprise') %}
+            <section class="mb-12 text-center">
+                {% if not source_movie_details %}
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Movie Recommender</h1>
+                <p class="text-xl text-gray-300 mb-8">Find movies similar to your favorites.</p>
                 {% endif %}
                 
-                <span class="text-gray-400">
-                    Page {{ current_page }} of {{ total_pages }}
-                </span>
-                
-                {% if current_page < total_pages %}
-                    <a href="{{ pagination_base_url }}?page={{ current_page + 1 }}"
-                       class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                        Next &rarr;
-                    </a>
-                {% else %}
-                    <span class="bg-gray-700 text-gray-500 font-bold py-2 px-4 rounded-md cursor-not-allowed">
-                        Next &rarr;
-                    </span>
-                {% endif %}
-                
+                <div class="bg-gray-800 p-8 rounded-lg shadow-xl max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-6 text-white">Search by Title</h2>
+                    <form action="/recommend" method="post" class="flex flex-col md:flex-row gap-4 justify-center">
+                        <input type="hidden" name="source_context" value="home">
+                        <input type="text" name="movie_title"
+                            class="w-full md:w-2/3 px-5 py-3 text-gray-900 bg-gray-200 border-2 border-transparent rounded-lg focus:outline-none focus:border-indigo-400 text-lg placeholder-gray-500"
+                            placeholder="e.g., The Dark Knight" required>
+                        <button type="submit"
+                            class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none transition-colors duration-200 text-lg shadow-lg">
+                            Recommend
+                        </button>
+                    </form>
+
+                    {% if page_context == 'home' and not source_movie_details %}
+                    <div class="mt-8 border-t border-gray-700 pt-6">
+                        <h2 class="text-xl font-bold mb-4 text-gray-300">Or Popular Genres</h2>
+                        <div class="flex flex-wrap justify-center gap-2 h-auto">
+                            {% for genre in all_genres %}
+                            <a href="/genre/{{ genre }}"
+                                class="px-3 py-1.5 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ genre | title }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+        {% endif %} 
+        <section class="max-w-6xl mx-auto">
+            
+            {% if error %}
+            <div class="bg-red-900/80 border border-red-500 text-red-100 px-6 py-4 rounded-lg text-center mb-8 shadow-md backdrop-blur-sm">
+                <strong class="font-bold text-xl">Oops!</strong>
+                <span class="block sm:inline ml-2 text-lg">{{ error }}</span>
             </div>
             {% endif %}
 
-        {% endif %}
+            {% if matches %}
+            <div class="bg-gray-800 p-8 rounded-lg shadow-xl mb-8 border border-gray-700">
+                <h3 class="text-2xl font-bold mb-5 text-indigo-300 text-center">Did you mean one of these?</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for movie in matches %}
+                    <form action="/recommend" method="post" class="w-full">
+                        <input type="hidden" name="source_context" value="{{ page_context }}">
+                        <input type="hidden" name="movie_title" value="{{ movie }}">
+                        <button type="submit"
+                            class="w-full text-left px-6 py-4 bg-gray-700 hover:bg-indigo-600 rounded-lg text-gray-200 transition duration-200 flex justify-between items-center group">
+                            <span class="text-lg font-medium">{{ movie }}</span>
+                            <span class="opacity-0 group-hover:opacity-100 transition-opacity">➜</span>
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
-    </div>
+            {% if source_movie_details %}
+            <div class="bg-gray-800 rounded-lg shadow-2xl mb-12 overflow-hidden border border-gray-700">
+                <div class="bg-indigo-900/50 p-6 border-b border-gray-700">
+                    <h2 class="text-4xl font-extrabold text-white">{{ source_movie_details.title }}</h2>
+                </div>
+                <div class="p-8">
+                    <div class="grid md:grid-cols-2 gap-6 mb-6 text-sm">
+                        <div>
+                            <span class="text-indigo-400 font-bold uppercase">Director:</span>
+                            {% for d in source_movie_details.director %}
+                                <a href="/browse?person_name={{ d }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ d }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <span class="text-indigo-400 font-bold uppercase">Cast:</span> 
+                            {% for c in source_movie_details.cast %}
+                                <a href="/browse?person_name={{ c }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ c }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-indigo-400 font-bold uppercase">Genres:</span> 
+                            {% for g in source_movie_details.genres %}
+                                <a href="/genre/{{ g }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ g|title }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-300 text-lg leading-relaxed">{{ source_movie_details.overview }}</p>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold mb-8 text-white text-center border-b-2 border-gray-700 pb-4">Recommended Movies</h3>
+            {% endif %}
+
+            {% if list_title %}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-700 pb-4 gap-4">
+                <h3 class="text-3xl font-bold text-white">{{ list_title }}</h3>
+                
+                {% if page_context == 'catalog' %}
+                <div class="relative">
+                    <button id="genreFilterBtn" class="px-3 py-2 bg-gray-700 text-gray-200 rounded hover:bg-indigo-600 hover:text-white flex items-center font-bold shadow-md transition-colors border border-gray-600 text-sm">
+                        Filter by Genre <span class="ml-2 text-[10px]">▼</span>
+                    </button>
+                    
+                    <div id="genreFilterMenu" class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl py-2 hidden z-50 max-h-80 overflow-y-auto">
+                         <a href="/catalog" class="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-white border-b border-gray-700">All Movies</a>
+                        {% for genre in all_genres %}
+                        <a href="/catalog/genre/{{ genre }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-indigo-600 hover:text-white transition-colors">
+                            {{ genre | title }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if recommendations_data %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                {% for movie in recommendations_data %}
+                <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 border border-gray-700 flex flex-col h-full group">
+                    <div class="p-6 flex-grow">
+                        <form action="/recommend" method="post">
+                             <input type="hidden" name="source_context" value="{{ page_context }}">
+                             <button type="submit" name="movie_title" value="{{ movie.title }}" 
+                                class="text-2xl font-bold text-indigo-400 mb-3 hover:text-indigo-300 text-left leading-tight group-hover:underline">
+                                {{ movie.title }}
+                             </button>
+                        </form>
+                        
+                        <div class="text-sm text-gray-500 mb-4 space-y-1">
+                            {% if movie.genres %}
+                            <div>
+                                <span class="text-gray-600 font-semibold">Genre:</span> 
+                                {% for g in movie.genres %}
+                                    <a href="/genre/{{ g }}" class="hover:text-indigo-400 hover:underline border-b border-dotted border-gray-600 hover:border-indigo-400 transition-colors">{{ g|title }}</a>{{ ", " if not loop.last else "" }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if movie.cast %}
+                            <div>
+                                <span class="text-gray-600 font-semibold">Cast:</span> 
+                                {% for c in movie.cast %}
+                                    <a href="/browse?person_name={{ c }}" class="hover:text-indigo-400 hover:underline border-b border-dotted border-gray-600 hover:border-indigo-400 transition-colors">{{ c }}</a>{{ ", " if not loop.last else "" }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="text-gray-400 mb-4 line-clamp-3 text-sm leading-relaxed">{{ movie.overview }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/50 p-4 border-t border-gray-700">
+                        <div class="flex flex-wrap gap-2">
+                             {% if movie.reason %}
+                                <span class="px-2 py-1 bg-green-900/40 text-green-400 text-xs font-bold rounded border border-green-800 uppercase tracking-wide">
+                                    {{ movie.reason }}
+                                </span>
+                            {% else %}
+                                <span class="text-xs text-gray-500 font-bold uppercase self-center mr-1">Match:</span>
+                                {% if movie.reason_director %} 
+                                    <span class="px-1.5 py-0.5 bg-purple-900/40 text-purple-400 text-[10px] font-bold rounded border border-purple-800">
+                                        Director: <a href="/browse?person_name={{ movie.reason_director[0] }}" class="hover:underline border-b border-dotted border-purple-400/50">{{ movie.reason_director[0] }}</a>
+                                    </span> 
+                                {% endif %}
+                                {% if movie.reason_cast %} <span class="px-1.5 py-0.5 bg-yellow-900/40 text-yellow-400 text-[10px] font-bold rounded border border-yellow-800">Cast</span> {% endif %}
+                                {% if movie.reason_genres %} <span class="px-1.5 py-0.5 bg-blue-900/40 text-blue-400 text-[10px] font-bold rounded border border-blue-800">Genre</span> {% endif %}
+                                {% if movie.reason_fallback %} <span class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-[10px] font-bold rounded border border-gray-600">Plot</span> {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if total_pages and total_pages > 1 %}
+            <div class="flex justify-center mt-12 space-x-2">
+                {% if current_page > 1 %}
+                <a href="{{ pagination_base_url }}?page={{ current_page - 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition">Prev</a>
+                {% endif %}
+                
+                <span class="px-4 py-2 text-gray-400">Page <span class="text-white font-bold">{{ current_page }}</span> of {{ total_pages }}</span>
+                
+                {% if current_page < total_pages %}
+                <a href="{{ pagination_base_url }}?page={{ current_page + 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition">Next</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% endif %}
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('genreFilterBtn');
+            const menu = document.getElementById('genreFilterMenu');
+
+            if (btn && menu) {
+                // Toggle menu on button click
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent click from bubbling to window
+                    menu.classList.toggle('hidden');
+                });
+
+                // Close menu when clicking outside
+                window.addEventListener('click', function(e) {
+                    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

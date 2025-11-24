@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Movie Recommender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen font-sans p-4 md:p-8">
+
+    <nav class="max-w-3xl mx-auto mb-8 p-4 bg-gray-800 rounded-lg border border-gray-700 shadow-lg flex justify-center space-x-8">
+        <a href="/" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Home</a>
+        <a href="/catalog" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Movie Catalog</a>
+        <a href="/top100" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Top 100</a>
+        <a href="/about" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">About</a>
+        <a href="/browse" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Browse by Director/Actor</a>
+        <a href="/surprise" class="text-lg font-bold text-blue-400 hover:text-blue-300 transition duration-200">Surprise Me!</a>
+    </nav>
+
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+                About This Project
+            </h1>
+            <p class="text-lg text-gray-400">
+                Learn more about the data, technology, and how recommendations work.
+            </p>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400">Data Source</h2>
+            <p class="text-gray-400 mb-4">
+                This movie recommender is built using the TMDb 5000 dataset, which contains information about 5,000 movies from The Movie Database (TMDb). The dataset includes details such as movie titles, overviews, genres, cast, directors, and ratings.
+            </p>
+            <p class="text-gray-400">
+                Movies are ranked by a calculated 'quality_score' based on vote average and vote count to highlight high-quality films.
+            </p>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400">How Recommendations Work</h2>
+            <p class="text-gray-400 mb-4">
+                The recommender uses content-based filtering. When you search for a movie, it analyzes the genres, cast, and director of that movie and finds similar movies based on shared features.
+            </p>
+            <p class="text-gray-400 mb-4">
+                Cosine similarity is computed on TF-IDF vectors of movie overviews combined with genre, cast, and director information to generate recommendations.
+            </p>
+            <p class="text-gray-400">
+                Recommendations are explained by highlighting common directors, cast members, or genres between the source movie and the recommended ones.
+            </p>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400">Technologies Used</h2>
+            <ul class="text-gray-400 list-disc list-inside space-y-2">
+                <li><strong>Flask:</strong> A lightweight web framework for Python used to build the web application.</li>
+                <li><strong>Pandas:</strong> A powerful data manipulation library for handling and analyzing the movie dataset.</li>
+                <li><strong>Scikit-learn:</strong> Used for computing TF-IDF and cosine similarity for recommendations.</li>
+                <li><strong>Tailwind CSS:</strong> A utility-first CSS framework for styling the user interface.</li>
+                <li><strong>Jinja2:</strong> Templating engine used by Flask for rendering dynamic HTML pages.</li>
+            </ul>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400">Features</h2>
+            <ul class="text-gray-400 list-disc list-inside space-y-2">
+                <li>Search for movies by title and get personalized recommendations.</li>
+                <li>Browse movies by genre, with top lists and full catalogs.</li>
+                <li>Surprise Me! feature for discovering random high-quality movies.</li>
+                <li>Browse movies by director or actor.</li>
+                <li>Paginated catalogs for easy navigation.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
