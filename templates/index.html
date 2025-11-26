@@ -10,8 +10,20 @@
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Smooth transition for the dropdown menu */
+        /* Dropdown transition for smoother UX */
         #genreFilterMenu { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
+
+        /* --- REMOVE NUMBER INPUT SPINNERS (The Up/Down Arrows) --- */
+        /* For Chrome, Safari, Edge, Opera */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        /* For Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-indigo-900 min-h-screen text-gray-100 font-sans">
@@ -362,16 +374,36 @@
             </div>
             
             {% if total_pages and total_pages > 1 %}
-            <div class="flex justify-center mt-12 space-x-2">
-                {% if current_page > 1 %}
-                <a href="{{ pagination_base_url }}?page={{ current_page - 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition">Prev</a>
-                {% endif %}
+            <div class="flex flex-wrap justify-center items-center mt-12 gap-4">
                 
-                <span class="px-4 py-2 text-gray-400">Page <span class="text-white font-bold">{{ current_page }}</span> of {{ total_pages }}</span>
-                
-                {% if current_page < total_pages %}
-                <a href="{{ pagination_base_url }}?page={{ current_page + 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition">Next</a>
-                {% endif %}
+                <div class="flex items-center space-x-2">
+                    {% if current_page > 1 %}
+                    <a href="{{ pagination_base_url }}?page={{ current_page - 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition shadow-md">Prev</a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-gray-800 text-gray-600 rounded cursor-not-allowed border border-gray-700">Prev</span>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 text-gray-400 font-medium">
+                        Page <span class="text-white">{{ current_page }}</span> / {{ total_pages }}
+                    </span>
+                    
+                    {% if current_page < total_pages %}
+                    <a href="{{ pagination_base_url }}?page={{ current_page + 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition shadow-md">Next</a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-gray-800 text-gray-600 rounded cursor-not-allowed border border-gray-700">Next</span>
+                    {% endif %}
+                </div>
+
+                <form action="{{ pagination_base_url }}" method="get" class="flex items-center space-x-2 bg-gray-800 p-1 rounded-lg border border-gray-700">
+                    <label for="page_jump" class="text-gray-400 text-sm pl-2">Go:</label>
+                    <input type="number" id="page_jump" name="page" min="1" max="{{ total_pages }}" 
+                           class="w-16 px-2 py-1 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:outline-none text-center text-sm placeholder-gray-500"
+                           placeholder="#">
+                    <button type="submit" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm font-bold hover:bg-indigo-500 transition shadow-sm">
+                        &rarr;
+                    </button>
+                </form>
+
             </div>
             {% endif %}
             
