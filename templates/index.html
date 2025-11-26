@@ -6,11 +6,11 @@
     <title>Movie Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom Animation: Smooth fade-in effect for the main content */
+        /* Custom Animation: Smooth fade-in effect */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Dropdown transition for smoother UX */
+        /* Smooth transition for the dropdown menu */
         #genreFilterMenu { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
     </style>
 </head>
@@ -39,8 +39,29 @@
                 
                 <section class="bg-gray-800 p-8 rounded-lg shadow-xl border-l-4 border-indigo-500">
                     <h1 class="text-4xl font-extrabold text-indigo-300 mb-6">About This Project</h1>
-                    <p class="text-gray-300 mb-4 text-lg leading-relaxed">
-                        This project solves the "cold-start" problem in movie recommendation...
+                    <p class="text-gray-300 mb-6 text-lg leading-relaxed">
+                        This project solves the "cold-start" problem in movie recommendation. By analyzing metadata (Directors, Cast, Genres), 
+                        we use a <strong>Weighted Content-Based</strong> approach to find semantic similarities without needing user history.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 items-center pt-4 border-t border-gray-700">
+                        <a href="https://github.com/MichaelFirstAC/MovieCatalog.git" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-700 border border-gray-600 rounded-md font-semibold text-gray-200 hover:bg-gray-600 hover:text-white transition shadow-sm">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                            View Code
+                        </a>
+                        <span class="text-sm text-gray-400">
+                            Data Source: <a href="https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata" target="_blank" class="text-indigo-400 hover:underline">TMDB 5000 (Kaggle)</a>
+                        </span>
+                    </div>
+                </section>
+
+                <section class="bg-indigo-900/30 p-6 rounded-lg border border-indigo-700/50">
+                    <h3 class="text-xl font-bold text-white mb-2 flex items-center">
+                        <span class="text-2xl mr-2">🧪</span> Why Trust Our Ratings?
+                    </h3>
+                    <p class="text-indigo-100 text-sm leading-relaxed">
+                        Most sites just use a raw average (1-10). But a movie with <strong>one 10/10 vote</strong> isn't better than a movie with <strong>10,000 8/10 votes</strong>. 
+                        We use a <strong>Bayesian Average</strong> (the same math IMDb uses) to weigh ratings against vote counts, ensuring our 'Top Rated' lists actually feature high-quality films.
                     </p>
                 </section>
 
@@ -70,24 +91,24 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="https://ui-avatars.com/api/?name=Michael+Arianno&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
+                                <img src="{{ url_for('static', filename='images/michael.jpeg') }}" alt="Michael Arianno" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">Michael Arianno</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Lead Developer</p>
+                            <h3 class="text-xl font-bold text-white">MichaelFirstAC</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">System Architect & Backend</p>
                         </div>
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="https://ui-avatars.com/api/?name=Member+Two&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
+                                <img src="{{ url_for('static', filename='images/timothy.jpeg') }}" alt="Timothy" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">Member 2</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist</p>
+                            <h3 class="text-xl font-bold text-white">Timotimanuel12</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist & UI/UX</p>
                         </div>
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="https://ui-avatars.com/api/?name=Member+Three&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
+                                <img src="{{ url_for('static', filename='images/Harris.jpeg') }}" alt="Harris" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">Member 3</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Feature Dev</p>
+                            <h3 class="text-xl font-bold text-white">HES2209</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Documenter & Feature Dev</p>
                         </div>
                     </div>
                 </section>
@@ -190,6 +211,7 @@
             {% endif %}
 
         {% endif %} 
+        
         <section class="max-w-6xl mx-auto">
             
             {% if error %}
@@ -364,13 +386,11 @@
             const menu = document.getElementById('genreFilterMenu');
 
             if (btn && menu) {
-                // Toggle menu on button click
                 btn.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Stop click from bubbling to window
+                    e.stopPropagation();
                     menu.classList.toggle('hidden');
                 });
 
-                // Close menu when clicking anywhere else
                 window.addEventListener('click', function(e) {
                     if (!menu.contains(e.target) && !btn.contains(e.target)) {
                         menu.classList.add('hidden');
