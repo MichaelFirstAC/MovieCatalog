@@ -6,10 +6,11 @@
     <title>Movie Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Smooth fade in */
+        /* Custom Animation: Smooth fade-in effect for the main content */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Smooth transition for the dropdown */
+        
+        /* Dropdown transition for smoother UX */
         #genreFilterMenu { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
     </style>
 </head>
@@ -35,13 +36,14 @@
 
         {% if page_context == 'about' %}
             <div class="max-w-4xl mx-auto space-y-8">
+                
                 <section class="bg-gray-800 p-8 rounded-lg shadow-xl border-l-4 border-indigo-500">
                     <h1 class="text-4xl font-extrabold text-indigo-300 mb-6">About This Project</h1>
                     <p class="text-gray-300 mb-4 text-lg leading-relaxed">
-                        This project solves the "cold-start" problem in movie recommendation. By analyzing metadata (Directors, Cast, Genres), 
-                        we use a <strong>Weighted Content-Based</strong> approach to find semantic similarities without needing user history.
+                        This project solves the "cold-start" problem in movie recommendation...
                     </p>
                 </section>
+
                 <div class="grid md:grid-cols-2 gap-8">
                     <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
                          <h2 class="text-2xl font-bold text-white mb-4">Tech Stack</h2>
@@ -176,7 +178,7 @@
                         <div class="flex flex-wrap justify-center gap-2 h-auto">
                             {% for genre in all_genres %}
                             <a href="/genre/{{ genre }}"
-                                class="px-3 py-1 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                class="px-3 py-1.5 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
                                 {{ genre | title }}
                             </a>
                             {% endfor %}
@@ -364,11 +366,11 @@
             if (btn && menu) {
                 // Toggle menu on button click
                 btn.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent click from bubbling to window
+                    e.stopPropagation(); // Stop click from bubbling to window
                     menu.classList.toggle('hidden');
                 });
 
-                // Close menu when clicking outside
+                // Close menu when clicking anywhere else
                 window.addEventListener('click', function(e) {
                     if (!menu.contains(e.target) && !btn.contains(e.target)) {
                         menu.classList.add('hidden');
