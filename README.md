@@ -2,58 +2,79 @@
 
 ## Introduction
 
-This project is a web-based movie recommendation application developed as a final project for the Fundamentals of Data Science. The application provides two primary features:
+This project is a web-based movie recommendation application developed as a final project for the Fundamentals of Data Science. It addresses the "choice overload" and "cold-start" problems common in streaming platforms by providing intelligent, content-based suggestions without requiring user history.
 
-1. Content-Based Recommender: A predictive model that suggests films based on their content similarity. This system utilizes machine learning, specifically Natural Language Processing (NLP) with TF-IDF Vectorization and Cosine Similarity, to analyze movie attributes (genres, keywords, cast, and crew) and recommend similar titles.
+The system utilizes a **hybrid approach**:
+1.  **Weighted Content-Based Filtering:** Uses TF-IDF Vectorization and Cosine Similarity to find semantically similar movies, with higher weights assigned to **Directors** and **Cast** to capture "auteur" style and star power.
+2.  **Bayesian Quality Scoring:** Implements the IMDb weighted rating formula to ensure that recommended movies are statistically high-quality, balancing raw ratings with vote counts.
 
-2. Movie Catalog: A full, navigable, and sortable catalog of all movies contained within the dataset, allowing users to browse the complete collection.
+## Key Features
 
-This application is built using Python and the Flask web framework, with data manipulation handled by Pandas and the machine learning model powered by Scikit-learn.
+* ** Content-Based Recommender:** Suggests movies based on a "Weighted Soup" of metadata (Director x3, Cast x2, Keywords x1, Genres x1).
+* ** Browse by Star:** Search for movies featuring specific Actors or Directors. Includes a "Cold Start" fix that suggests popular stars if the search is empty.
+* ** Surprise Me!:** A discovery feature that randomly selects a high-quality movie from the top-rated 500 films.
+* ** Smart Catalog:** A full, paginated library of over 4,800 movies, filterable by Genre and sorted by Bayesian Quality Score.
+* ** Interactive Metadata:** All Directors, Cast members, and Genres are clickable, allowing seamless navigation to related content.
+* ** Modern UI:** A responsive, dark-themed interface built with Tailwind CSS.
+
+## Tech Stack
+
+* **Backend:** Python, Flask
+* **Data Manipulation:** Pandas, NumPy
+* **Machine Learning:** Scikit-learn (TF-IDF, Cosine Similarity)
+* **Frontend:** HTML5, Tailwind CSS (via CDN)
 
 ## Running the Application
 
 ### Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
-
-- Python 3.x
-- The pip package manager
+- Python 3.x (This program is made in 3.14, but any version of 3.x python should work.)
+- The `pip` package manager
 
 ### Installation and Setup
+
 Follow these steps to set up and run the application locally.
 
-1. Clone the Repository Clone this repository to your local machine:
-
+1. Clone the Repository
 ```
-git clone https://github.com/MichaelFirstAC/MovieCatalog.git
+git clone [https://github.com/MichaelFirstAC/MovieCatalog.git](https://github.com/MichaelFirstAC/MovieCatalog.git)
+cd MovieCatalog
 ```
-
 2. Install Dependencies Install the required Python libraries using pip:
 
 ```
 pip install flask pandas scikit-learn
 ```
+3. Prepare the Data and Model (One-Time Setup)
 
-3. Prepare the Data and Model (One-Time Setup) The application requires the raw CSV files (```tmdb_5000_movies.csv``` and ```tmdb_5000_credits.csv```) to be present in the root directory. To do this, simply extract the ```archive.zip``` file and have it present on the repository.
+The application requires the raw CSV files (`tmdb_5000_movies.csv` and `tmdb_5000_credits.csv`) to be present in the root directory.
+- Note: If these files are zipped (`archive.zip`), please extract them into the root folder first.
 
-Run the ```prepare_model.py``` script once. This script will read the raw data, perform all necessary cleaning and feature engineering, build the similarity model, and save the processed files (```movies.pkl``` and ```cosine_sim.pkl```).
+Run the `prepare_model.py` script. This script will:
+- Clean and parse the JSON datasets.
+- Calculate the Bayesian Quality Score for every movie.
+- Build the TF-IDF and Cosine Similarity matrices.
+- Save the processed models (movies.pkl and cosine_sim.pkl).
 
 ```
 python prepare_model.py
 ```
 
-4. Run the Web Application Once the model files are generated, you can start the Flask server:
+4. Run the Web Application Once the model files are generated, start the Flask server:
 
 ```
 python app.py
 ```
-
-You should see output in your terminal indicating that the server is running, typically on http://127.0.0.1:5000/.
+You should see output indicating the server is running, typically on `http://127.0.0.1:5000/`.
 
 5. Access the Application Open your web browser and navigate to:
 
-```
-http://127.0.0.1:5000/
-```
+[http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 
-You can now use the recommender or navigate to the "Movie Catalog" to browse the full list.
+### Project Structure
+- app.py: The main Flask application containing routing logic and the recommendation engine.
+- prepare_model.py: The data pipeline script for cleaning, feature engineering, and model training.
+- templates/index.html: The unified frontend template handling all views (Home, Catalog, Browse, etc.).
+- static/: Contains CSS assets and team images.
+- movies.pkl & cosine_sim.pkl: Serialized model files generated by the preparation script.
