@@ -10,12 +10,12 @@ The system utilizes a **hybrid approach**:
 
 ## Key Features
 
-* ** Content-Based Recommender:** Suggests movies based on a "Weighted Soup" of metadata (Director x3, Cast x2, Keywords x1, Genres x1).
-* ** Browse by Star:** Search for movies featuring specific Actors or Directors. Includes a "Cold Start" fix that suggests popular stars if the search is empty.
-* ** Surprise Me!:** A discovery feature that randomly selects a high-quality movie from the top-rated 500 films.
-* ** Smart Catalog:** A full, paginated library of over 4,800 movies, filterable by Genre and sorted by Bayesian Quality Score.
-* ** Interactive Metadata:** All Directors, Cast members, and Genres are clickable, allowing seamless navigation to related content.
-* ** Modern UI:** A responsive, dark-themed interface built with Tailwind CSS.
+* **Content-Based Recommender:** Suggests movies based on a "Weighted Soup" of metadata (Director x3, Cast x2, Keywords x1, Genres x1).
+* **Browse by Star:** Search for movies featuring specific Actors or Directors. Includes a "Cold Start" fix that suggests popular stars if the search is empty.
+* **Surprise Me!:** A discovery feature that randomly selects a high-quality movie from the top-rated 500 films.
+* **Smart Catalog:** A full, paginated library of over 4,800 movies, filterable by Genre and sorted by Bayesian Quality Score.
+* **Interactive Metadata:** All Directors, Cast members, and Genres are clickable, allowing seamless navigation to related content.
+* **Modern UI:** A responsive, dark-themed interface built with Tailwind CSS.
 
 ## Tech Stack
 
