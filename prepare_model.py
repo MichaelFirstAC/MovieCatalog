@@ -1,143 +1,132 @@
 # --- Imports ---
-import pandas as pd # For loading and manipulating data (CSVs)
-import pickle # For saving our final Python objects (dataframe and matrix) to files
-from sklearn.feature_extraction.text import TfidfVectorizer # To convert text "soup" into numerical vectors
-from sklearn.metrics.pairwise import cosine_similarity # To calculate the similarity matrix
-import json # For parsing text columns that contain JSON-like strings
+import pandas as pd  # Data manipulation and analysis
+import pickle  # Serialization for saving model artifacts
+import json  # Parsing JSON-formatted strings
 
-# --- 1. Load and Build Content-Based Model ---
-print("Building Hybrid Content-Quality Model...")
+# Machine Learning Libraries
+from sklearn.feature_extraction.text import TfidfVectorizer  # Text vectorization
+from sklearn.metrics.pairwise import cosine_similarity  # Similarity calculation
 
-# --- Load and prepare the original data ---
-# Load the two CSV files into pandas DataFrames
+# --- 1. Data Loading and Preprocessing ---
+print("Initiating model preparation process...")
+
+# --- Load raw datasets ---
 movies_df = pd.read_csv('tmdb_5000_movies.csv')
 credits_df = pd.read_csv('tmdb_5000_credits.csv')
-# Merge them into one large DataFrame based on the movie ID
+
+# Merge datasets on movie ID to consolidate metadata and cast/crew information
 df = movies_df.merge(credits_df, left_on='id', right_on='movie_id')
 
-# --- Select and clean up columns ---
-# Create a new DataFrame with only the columns we need
+# Select relevant features for the recommendation engine
 recommender_df = df[['movie_id', 'title_x', 'overview', 'genres', 'keywords',
                      'cast', 'crew', 'vote_average', 'vote_count']].copy()
-# Rename 'title_x' (from the merge) to just 'title'
+
+# Standardize column names
 recommender_df.rename(columns={'title_x': 'title'}, inplace=True)
 
 
-# --- Feature engineering functions ---
+# --- Feature Engineering Functions ---
+
 def parse_json_list(text, key='name'):
-    """Helper function to parse JSON-like strings (e.g., in 'genres') and extract a list of names."""
+    """
+    Parses a JSON-formatted string and extracts a list of values associated with the specified key.
+    """
     try:
         items = json.loads(text)
         return [item[key] for item in items]
-    except:
+    except (ValueError, TypeError):
         return []
 
-
 def get_director(text):
-    """Helper function to parse the 'crew' column and find the director's name."""
+    """
+    Extracts the director's name from the 'crew' JSON string.
+    """
     try:
         crew = json.loads(text)
         for member in crew:
-            if member.get('job') == 'Director': return [member['name']]
+            if member.get('job') == 'Director':
+                return [member['name']]
         return []
-    except:
+    except (ValueError, TypeError):
         return []
 
 def clean_spaces(item_list):
-    """Helper function to remove spaces and lowercase all items in a list (e.g., 'Joss Whedon' -> 'josswhedon').
-       This is crucial for the model to see 'Robert Downey Jr.' and 'robertdowneyjr' as the same entity."""
+    """
+    Standardizes text data by converting to lowercase and removing whitespace.
+    This ensures unique entity recognition (e.g., treating 'Johnny Depp' as a single token).
+    """
     return [str(item).replace(' ', '').lower() for item in item_list]
 
 
-# --- Process Text/JSON Columns ---
-# This loop applies the helper functions to parse the raw text data.
-# It keeps the original "pretty" names (with spaces and capitalization) in the DataFrame.
+# --- Apply Transformations ---
+# Apply parsing and cleaning functions to feature columns
 for feature in ['genres', 'keywords', 'cast', 'director']:
     if feature == 'cast':
-        # Get the top 3 cast members
+        # Limit to the top 3 cast members for feature relevance
         recommender_df[feature] = recommender_df[feature].apply(lambda x: parse_json_list(x)[:3])
     elif feature == 'director':
-        # Get the director from the 'crew' column
         recommender_df[feature] = recommender_df['crew'].apply(get_director)
     else:
-        # Get all genres or keywords
         recommender_df[feature] = recommender_df[feature].apply(parse_json_list)
-    
-    # We NO LONGER call clean_spaces() here. This keeps names like "Robert Downey Jr."
-    # intact in the main DataFrame, which is good for display in the app.
 
 
 # --- Calculate Quality Score (Bayesian Average) ---
-# This creates a more reliable "score" than just the raw 'vote_average'.
-# It balances the average rating with the number of votes.
+# Implement a weighted rating formula to balance vote average with vote count,
+# mitigating bias from movies with sparse ratings.
 
-# C = The mean vote average across the whole dataset
-C = recommender_df['vote_average'].mean()
-# m = The minimum number of votes required (set to 90th percentile)
-# A movie needs more votes than 90% of other movies to be considered.
-m = recommender_df['vote_count'].quantile(0.90)
+C = recommender_df['vote_average'].mean()  # Global mean rating
+m = recommender_df['vote_count'].quantile(0.90)  # Minimum vote threshold
 
-print(f"\nCalculating Bayesian Average with C={C:.2f} (mean rating) and m={m:.0f} (min votes).")
+print(f"Calculating Bayesian Average (Mean={C:.2f}, Min Votes={m:.0f})...")
 
 def calculate_bayesian_avg(x, m=m, C=C):
-    """Calculates the weighted rating (Bayesian Average) based on IMDB's formula."""
-    v = x['vote_count'] # Number of votes for this movie
-    R = x['vote_average'] # Average rating for this movie
-    # Formula pulls the movie's score towards the dataset mean (C)
-    # if it has few votes (v).
+    v = x['vote_count']
+    R = x['vote_average']
+    # IMDb Weighted Rating Formula
     return (v / (v + m) * R) + (m / (v + m) * C)
 
-
-# Apply the function to every movie to create the new 'quality_score' column
+# Generate the 'quality_score' feature
 recommender_df['quality_score'] = recommender_df.apply(calculate_bayesian_avg, axis=1)
 
 
-# --- Create "Soup" for TF-IDF Model ---
-# The "soup" is a single string for each movie, combining all its important text features.
-# We give *more weight* to director and cast by repeating them.
+# --- Generate Composite Feature String ("Soup") ---
+# Aggregates key text features into a single string for vectorization.
+# Features are weighted by repetition to emphasize Directors (3x) and Cast (2x).
 def create_weighted_soup(x):
-    """Combines director, cast, keywords, and genres into one string,
-       cleaning spaces and weighting features."""
-    # We call clean_spaces() HERE, so it only affects the "soup"
-    # and not the main DataFrame.
-    director_soup = ' '.join(clean_spaces(x['director'])) * 3 # Director is most important
-    cast_soup = ' '.join(clean_spaces(x['cast'])) * 2 # Cast is second most
+    director_soup = ' '.join(clean_spaces(x['director'])) * 3
+    cast_soup = ' '.join(clean_spaces(x['cast'])) * 2
     keywords_soup = ' '.join(clean_spaces(x['keywords']))
     genres_soup = ' '.join(clean_spaces(x['genres']))
-
-    # Return one big string
     return f"{director_soup} {cast_soup} {keywords_soup} {genres_soup}"
 
-
-print("Creating weighted feature 'soup'...")
-# Apply the function to create the 'soup' column
+print("Generating weighted feature composite string...")
 recommender_df['soup'] = recommender_df.apply(create_weighted_soup, axis=1)
 
-# --- 4. Build the Content-Similarity Model ---
-# Initialize the TF-IDF Vectorizer, removing common English "stop words"
+
+# --- Build Recommendation Model ---
+print("Training TF-IDF Vectorizer...")
+# Initialize vectorizer, removing standard English stop words
 tfidf = TfidfVectorizer(stop_words='english')
-# Create the TF-IDF matrix by fitting and transforming the 'soup'
-# This converts all text into a matrix of numerical values.
 tfidf_matrix = tfidf.fit_transform(recommender_df['soup'])
 
-# Calculate the cosine similarity between all movies (all rows in the matrix)
-# This results in a square matrix (e.g., 4803x4803) where each cell (i, j)
-# is the similarity score between movie i and movie j.
+print("Computing Cosine Similarity Matrix...")
+# Compute pairwise similarity scores between all movies
 cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-print("✅ Weighted Content-Based Model built.")
 
-# --- 5. Save ALL models to files ---
-print("\nSaving all models to .pkl files...")
+# --- Artifact Serialization ---
+print("Saving model artifacts...")
 
-# Save the main DataFrame (with pretty names and quality score) to 'movies.pkl'
-# This file is used by app.py to get movie details.
+# Serialize processed DataFrame
 pickle.dump(recommender_df, open('movies.pkl', 'wb'))
-print("  - movies.pkl (Content data + Quality Score) saved.")
+print("   - movies.pkl saved.")
 
-# Save the similarity matrix to 'cosine_sim.pkl'
-# This file is used by app.py to find recommendations.
+# Serialize similarity matrix
 pickle.dump(cosine_sim, open('cosine_sim.pkl', 'wb'))
-print("  - cosine_sim.pkl (Weighted content model) saved.")
+print("   - cosine_sim.pkl saved.")
 
-print("\n✅ All models and data saved successfully!")
+# Export processed data to CSV for verification
+recommender_df.to_csv('movies_clean.csv', index=False)
+print("   - movies_clean.csv saved.")
+
+print("\nProcess completed successfully. System ready.")

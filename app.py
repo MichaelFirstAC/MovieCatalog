@@ -7,15 +7,20 @@ from collections import Counter
 app = Flask(__name__)
 
 # --- Load Data and Models ---
-# Ensure movies.pkl and cosine_sim.pkl are in the same folder
 movies = pickle.load(open('movies.pkl', 'rb'))
 cosine_sim = pickle.load(open('cosine_sim.pkl', 'rb'))
 
 # --- Global Variables ---
+# 1. Genres
 all_genres_set = set()
 for genre_list in movies['genres']:
     all_genres_set.update(genre_list)
 ALL_GENRES_LIST = sorted(list(all_genres_set))
+
+# 2. People (For the Browse Search)
+all_cast = set([c for sublist in movies['cast'] for c in sublist])
+all_directors = set([d for sublist in movies['director'] for d in sublist])
+ALL_PEOPLE_LIST = sorted(list(all_cast.union(all_directors)))
 
 PER_PAGE = 30
 
@@ -23,7 +28,6 @@ PER_PAGE = 30
 
 @app.route('/')
 def home():
-    # Top 20 for the home page list
     top_20 = movies.sort_values('quality_score', ascending=False).head(20)
     recommendations_data = []
     for _, movie in top_20.iterrows():
@@ -89,11 +93,8 @@ def catalog_genre(name):
 
 @app.route('/genre/<genre_name>')
 def browse_genre(genre_name):
-    # This acts as the "Browse by Genre" results page
     def contains_genre(genre_list): return genre_name in genre_list
     genre_movies = movies[movies['genres'].apply(contains_genre)]
-    
-    # Show top 50 for simplicity
     top_genre = genre_movies.sort_values('quality_score', ascending=False).head(50)
     
     recommendations_data = []
@@ -116,26 +117,21 @@ def recommend():
     if not user_input or not user_input.strip():
         return render_template('index.html', error="Please enter a movie title.", all_genres=ALL_GENRES_LIST, page_context=source_context)
 
-    # 1. Exact Match
     exact_matches = movies[movies['title'].str.lower() == user_input.lower()]
     if len(exact_matches) == 1:
         matching_movies = exact_matches
     elif len(exact_matches) > 1:
         return render_template('index.html', matches=exact_matches['title'].tolist(), all_genres=ALL_GENRES_LIST, page_context=source_context)
     else:
-        # 2. Partial Match
         matching_movies = movies[movies['title'].str.contains(user_input, case=False)]
         if matching_movies.empty:
             return render_template('index.html', error=f"No movies found matching '{user_input}'.", all_genres=ALL_GENRES_LIST, page_context=source_context)
         elif len(matching_movies) > 1:
             return render_template('index.html', matches=matching_movies['title'].tolist(), all_genres=ALL_GENRES_LIST, page_context=source_context)
 
-    # 3. Recommendations
     try:
         exact_title = matching_movies.iloc[0]['title']
         idx = movies[movies['title'] == exact_title].index[0]
-        
-        # Source Movie Details
         source_movie = movies.iloc[idx]
         source_details = {
             'title': source_movie['title'],
@@ -145,13 +141,10 @@ def recommend():
             'director': source_movie['director']
         }
         
-        # Similarity Calculation
         sim_scores = list(enumerate(cosine_sim[idx]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
         sim_scores = sim_scores[1:11]
         movie_indices = [i[0] for i in sim_scores]
-        
-        # Logic for "Why you might like it"
         source_features = {'genres': set(source_movie['genres']), 'cast': set(source_movie['cast']), 'director': set(source_movie['director'])}
         
         recommendations_data = []
@@ -184,7 +177,6 @@ def about():
 
 @app.route('/surprise')
 def surprise():
-    # Pick a random high-quality movie
     top_500 = movies.sort_values('quality_score', ascending=False).head(500)
     random_movie = top_500.sample(n=1).iloc[0]
     
@@ -221,35 +213,46 @@ def surprise():
             'genres': rec_movie['genres'],
             'cast': rec_movie['cast']
         })
-    
-    # Using 'surprise' context to hide search bar
     return render_template('index.html', source_movie_details=source_details, recommendations_data=recommendations_data, all_genres=ALL_GENRES_LIST, page_context='surprise')
 
 @app.route('/browse', methods=['GET', 'POST'])
 def browse():
-    # --- Suggestions Logic (Cold Start Fix) ---
+    # --- Suggestions Logic ---
     all_actors = [actor for sublist in movies['cast'] for actor in sublist]
     all_directors = [director for sublist in movies['director'] for director in sublist]
     popular_actors = [name for name, count in Counter(all_actors).most_common(12)]
     popular_directors = [name for name, count in Counter(all_directors).most_common(12)]
 
-    # --- Handle Requests ---
+    # --- Handle Input ---
     if request.method == 'POST':
         person_name = request.form.get('person_name')
     else:
         person_name = request.args.get('person_name')
 
     if person_name:
-        if not person_name.strip():
-            return render_template('index.html', error="Please enter a name.", all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
-            
+        # 1. Find matching names in database (Fuzzy Search)
+        matches = [p for p in ALL_PEOPLE_LIST if person_name.lower() in p.lower()]
+
+        if not matches:
+             return render_template('index.html', error=f"No director or actor found matching '{person_name}'.", all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
+        
+        if len(matches) > 1:
+             # Check for exact match to prioritize
+             exact_match = [p for p in matches if p.lower() == person_name.lower()]
+             if len(exact_match) == 1:
+                 person_name = exact_match[0]
+             else:
+                 # SHOW "DID YOU MEAN?"
+                 return render_template('index.html', matches=matches[:20], all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
+        else:
+             person_name = matches[0]
+
+        # 2. Filter movies with the EXACT validated name
         def contains_person(movie):
-            directors = [d.lower() for d in movie['director']]
-            cast = [c.lower() for c in movie['cast']]
-            name_lower = person_name.lower()
-            return name_lower in directors or name_lower in cast
+            return person_name in movie['director'] or person_name in movie['cast']
 
         filtered = movies[movies.apply(contains_person, axis=1)]
+        
         if filtered.empty:
             return render_template('index.html', error=f"No movies found for '{person_name}'.", all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
             
@@ -263,7 +266,7 @@ def browse():
                 'genres': movie['genres'],
                 'cast': movie['cast']
             })
-        return render_template('index.html', recommendations_data=recommendations_data, list_title=f"Movies featuring {person_name.title()}", all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
+        return render_template('index.html', recommendations_data=recommendations_data, list_title=f"Movies featuring {person_name}", all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
 
     return render_template('index.html', all_genres=ALL_GENRES_LIST, page_context='browse', popular_actors=popular_actors, popular_directors=popular_directors)
 

@@ -35,7 +35,6 @@
 
         {% if page_context == 'about' %}
             <div class="max-w-4xl mx-auto space-y-8">
-                
                 <section class="bg-gray-800 p-8 rounded-lg shadow-xl border-l-4 border-indigo-500">
                     <h1 class="text-4xl font-extrabold text-indigo-300 mb-6">About This Project</h1>
                     <p class="text-gray-300 mb-4 text-lg leading-relaxed">
@@ -43,7 +42,6 @@
                         we use a <strong>Weighted Content-Based</strong> approach to find semantic similarities without needing user history.
                     </p>
                 </section>
-
                 <div class="grid md:grid-cols-2 gap-8">
                     <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
                          <h2 class="text-2xl font-bold text-white mb-4">Tech Stack</h2>
@@ -64,35 +62,31 @@
                         </ul>
                     </section>
                 </div>
-
+                
                 <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
                     <h2 class="text-3xl font-bold text-white mb-8 text-center">Meet the Team</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                        
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="{{ url_for('static', filename='images/michael.jpeg') }}" alt="Michael Arianno" class="w-full h-full object-cover">
+                                <img src="https://ui-avatars.com/api/?name=Michael+Arianno&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">MichaelFirstAC</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">System Architect & Backend Lead</p>
+                            <h3 class="text-xl font-bold text-white">Michael Arianno</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Lead Developer</p>
                         </div>
-
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="{{ url_for('static', filename='images/timothy.jpeg') }}" alt="Timothy Immanuel" class="w-full h-full object-cover">
+                                <img src="https://ui-avatars.com/api/?name=Member+Two&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">Timotimanuel12</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist & UI/UX Designer</p>
+                            <h3 class="text-xl font-bold text-white">Member 2</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist</p>
                         </div>
-
                         <div class="group">
                             <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
-                                <img src="{{ url_for('static', filename='images/harris.jpeg') }}" alt="Harris Ekaputra" class="w-full h-full object-cover">
+                                <img src="https://ui-avatars.com/api/?name=Member+Three&background=6366f1&color=fff&size=256" alt="Team Member" class="w-full h-full object-cover">
                             </div>
-                            <h3 class="text-xl font-bold text-white">HES2209</h3>
-                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Feature Developer & Documenter</p>
+                            <h3 class="text-xl font-bold text-white">Member 3</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Feature Dev</p>
                         </div>
-
                     </div>
                 </section>
             </div>
@@ -182,7 +176,7 @@
                         <div class="flex flex-wrap justify-center gap-2 h-auto">
                             {% for genre in all_genres %}
                             <a href="/genre/{{ genre }}"
-                                class="px-3 py-1.5 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                class="px-3 py-1 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
                                 {{ genre | title }}
                             </a>
                             {% endfor %}
@@ -207,13 +201,20 @@
             <div class="bg-gray-800 p-8 rounded-lg shadow-xl mb-8 border border-gray-700">
                 <h3 class="text-2xl font-bold mb-5 text-indigo-300 text-center">Did you mean one of these?</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% for movie in matches %}
+                    {% for match in matches %}
+                    
+                    {% if page_context == 'browse' %}
+                    <form action="/browse" method="post" class="w-full">
+                        <input type="hidden" name="person_name" value="{{ match }}">
+                    {% else %}
                     <form action="/recommend" method="post" class="w-full">
                         <input type="hidden" name="source_context" value="{{ page_context }}">
-                        <input type="hidden" name="movie_title" value="{{ movie }}">
+                        <input type="hidden" name="movie_title" value="{{ match }}">
+                    {% endif %}
+                        
                         <button type="submit"
                             class="w-full text-left px-6 py-4 bg-gray-700 hover:bg-indigo-600 rounded-lg text-gray-200 transition duration-200 flex justify-between items-center group">
-                            <span class="text-lg font-medium">{{ movie }}</span>
+                            <span class="text-lg font-medium">{{ match }}</span>
                             <span class="opacity-0 group-hover:opacity-100 transition-opacity">➜</span>
                         </button>
                     </form>
@@ -260,7 +261,7 @@
                 
                 {% if page_context == 'catalog' %}
                 <div class="relative">
-                    <button id="genreFilterBtn" class="px-3 py-2 bg-gray-700 text-gray-200 rounded hover:bg-indigo-600 hover:text-white flex items-center font-bold shadow-md transition-colors border border-gray-600 text-sm">
+                    <button id="genreFilterBtn" class="px-4 py-2 bg-gray-700 text-gray-200 rounded hover:bg-indigo-600 hover:text-white flex items-center font-bold shadow-md transition-colors border border-gray-600 text-sm">
                         Filter by Genre <span class="ml-2 text-[10px]">▼</span>
                     </button>
                     
@@ -323,7 +324,7 @@
                                 <span class="text-xs text-gray-500 font-bold uppercase self-center mr-1">Match:</span>
                                 {% if movie.reason_director %} 
                                     <span class="px-1.5 py-0.5 bg-purple-900/40 text-purple-400 text-[10px] font-bold rounded border border-purple-800">
-                                        Director: <a href="/browse?person_name={{ movie.reason_director[0] }}" class="hover:underline border-b border-dotted border-purple-400/50">{{ movie.reason_director[0] }}</a>
+                                        Director: <a href="/browse?person_name={{ movie.reason_director[0] }}" class="hover:underline">{{ movie.reason_director[0] }}</a>
                                     </span> 
                                 {% endif %}
                                 {% if movie.reason_cast %} <span class="px-1.5 py-0.5 bg-yellow-900/40 text-yellow-400 text-[10px] font-bold rounded border border-yellow-800">Cast</span> {% endif %}
