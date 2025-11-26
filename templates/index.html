@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Animation: Smooth fade-in effect */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Dropdown transition for smoother UX */
+        #genreFilterMenu { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
+
+        /* --- REMOVE NUMBER INPUT SPINNERS (The Up/Down Arrows) --- */
+        /* For Chrome, Safari, Edge, Opera */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        /* For Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-indigo-900 min-h-screen text-gray-100 font-sans">
+
+    <header class="bg-gray-800 shadow-lg sticky top-0 z-50 border-b border-indigo-900">
+        <nav class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center">
+            <a href="/" class="text-3xl font-bold text-white hover:text-indigo-300 transition">
+                <span class="text-indigo-400">Movie</span>Recommender
+            </a>
+            
+            <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                <a href="/" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Home</a>
+                <a href="/catalog" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Catalog</a>
+                <a href="/browse" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">Browse Star</a>
+                <a href="/about" class="text-gray-300 hover:text-indigo-400 font-medium transition-colors">About</a>
+                <a href="/surprise" class="text-indigo-400 hover:text-white font-bold transition-colors">Surprise Me!</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 fade-in">
+
+        {% if page_context == 'about' %}
+            <div class="max-w-4xl mx-auto space-y-8">
+                
+                <section class="bg-gray-800 p-8 rounded-lg shadow-xl border-l-4 border-indigo-500">
+                    <h1 class="text-4xl font-extrabold text-indigo-300 mb-6">About This Project</h1>
+                    <p class="text-gray-300 mb-6 text-lg leading-relaxed">
+                        This project solves the "cold-start" problem in movie recommendation. By analyzing metadata (Directors, Cast, Genres), 
+                        we use a <strong>Weighted Content-Based</strong> approach to find semantic similarities without needing user history.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 items-center pt-4 border-t border-gray-700">
+                        <a href="https://github.com/MichaelFirstAC/MovieCatalog.git" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-700 border border-gray-600 rounded-md font-semibold text-gray-200 hover:bg-gray-600 hover:text-white transition shadow-sm">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                            View Code
+                        </a>
+                        <span class="text-sm text-gray-400">
+                            Data Source: <a href="https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata" target="_blank" class="text-indigo-400 hover:underline">TMDB 5000 (Kaggle)</a>
+                        </span>
+                    </div>
+                </section>
+
+                <section class="bg-indigo-900/30 p-6 rounded-lg border border-indigo-700/50">
+                    <h3 class="text-xl font-bold text-white mb-2 flex items-center">
+                        <span class="text-2xl mr-2">🧪</span> Why Trust Our Ratings?
+                    </h3>
+                    <p class="text-indigo-100 text-sm leading-relaxed">
+                        Most sites just use a raw average (1-10). But a movie with <strong>one 10/10 vote</strong> isn't better than a movie with <strong>10,000 8/10 votes</strong>. 
+                        We use a <strong>Bayesian Average</strong> (the same math IMDb uses) to weigh ratings against vote counts, ensuring our 'Top Rated' lists actually feature high-quality films.
+                    </p>
+                </section>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                         <h2 class="text-2xl font-bold text-white mb-4">Tech Stack</h2>
+                        <ul class="list-disc list-inside text-gray-400 space-y-2">
+                            <li>Flask (Web Framework)</li>
+                            <li>Pandas & Scikit-Learn (Data & ML)</li>
+                            <li>TF-IDF & Cosine Similarity (Algorithms)</li>
+                            <li>Tailwind CSS (Styling)</li>
+                        </ul>
+                    </section>
+                    <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                        <h2 class="text-2xl font-bold text-white mb-4">Features</h2>
+                        <ul class="list-disc list-inside text-gray-400 space-y-2">
+                            <li>Bayesian Quality Scoring</li>
+                            <li>Weighted "Soup" Vectorization</li>
+                            <li>Catalog Pagination</li>
+                            <li>Director/Actor Browsing</li>
+                        </ul>
+                    </section>
+                </div>
+                
+                <section class="bg-gray-800 p-8 rounded-lg shadow-xl">
+                    <h2 class="text-3xl font-bold text-white mb-8 text-center">Meet the Team</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/michael.jpeg') }}" alt="Michael Arianno" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">MichaelFirstAC</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">System Architect & Backend</p>
+                        </div>
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/timothy.jpeg') }}" alt="Timothy" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Timotimanuel12</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Data Scientist & UI/UX</p>
+                        </div>
+                        <div class="group">
+                            <div class="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-indigo-500 shadow-lg transform group-hover:scale-105 transition duration-300">
+                                <img src="{{ url_for('static', filename='images/Harris.jpeg') }}" alt="Harris" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold text-white">HES2209</h3>
+                            <p class="text-indigo-400 text-sm font-medium uppercase tracking-wide">Documenter & Feature Dev</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        {% elif page_context == 'browse' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Browse by Star</h1>
+                <p class="text-xl text-gray-300">Enter an actor or director to see their best work.</p>
+            </section>
+            <section class="mb-12 bg-gray-800 p-8 rounded-lg shadow-xl max-w-4xl mx-auto">
+                <form action="/browse" method="post" class="flex flex-col md:flex-row gap-4 justify-center mb-10">
+                    <input type="text" name="person_name"
+                        class="w-full md:w-2/3 px-5 py-3 text-gray-900 bg-gray-200 border-2 border-transparent rounded-lg focus:outline-none focus:border-indigo-400 text-lg placeholder-gray-500"
+                        placeholder="e.g. Christopher Nolan, Brad Pitt" required>
+                    <button type="submit"
+                        class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none transition-colors duration-200 text-lg shadow-lg">
+                        Search
+                    </button>
+                </form>
+
+                {% if popular_actors and popular_directors %}
+                <div class="grid md:grid-cols-2 gap-8 border-t border-gray-700 pt-8">
+                    <div class="text-center">
+                        <h3 class="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider">Popular Directors</h3>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            {% for person in popular_directors %}
+                            <a href="/browse?person_name={{ person }}"
+                               class="px-3 py-1.5 bg-gray-900 text-indigo-400 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ person }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <h3 class="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider">Popular Actors</h3>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            {% for person in popular_actors %}
+                            <a href="/browse?person_name={{ person }}"
+                               class="px-3 py-1.5 bg-gray-900 text-indigo-400 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ person }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+
+        {% elif page_context == 'catalog' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Movie Catalog</h1>
+                <p class="text-xl text-gray-300">Browse and filter through our complete library of films.</p>
+            </section>
+
+        {% elif page_context == 'surprise' %}
+            <section class="mb-12 text-center">
+                <h1 class="text-5xl font-extrabold mb-4 text-purple-400">Surprise Recommendation</h1>
+                <p class="text-xl text-gray-300">We picked this high-rated gem just for you.</p>
+            </section>
+
+        {% else %}
+            
+            {% if page_context == 'home' or (source_movie_details and page_context != 'surprise') %}
+            <section class="mb-12 text-center">
+                {% if not source_movie_details %}
+                <h1 class="text-5xl font-extrabold mb-4 text-indigo-300">Movie Recommender</h1>
+                <p class="text-xl text-gray-300 mb-8">Find movies similar to your favorites.</p>
+                {% endif %}
+                
+                <div class="bg-gray-800 p-8 rounded-lg shadow-xl max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-6 text-white">Search by Title</h2>
+                    <form action="/recommend" method="post" class="flex flex-col md:flex-row gap-4 justify-center">
+                        <input type="hidden" name="source_context" value="home">
+                        <input type="text" name="movie_title"
+                            class="w-full md:w-2/3 px-5 py-3 text-gray-900 bg-gray-200 border-2 border-transparent rounded-lg focus:outline-none focus:border-indigo-400 text-lg placeholder-gray-500"
+                            placeholder="e.g., The Dark Knight" required>
+                        <button type="submit"
+                            class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 focus:outline-none transition-colors duration-200 text-lg shadow-lg">
+                            Recommend
+                        </button>
+                    </form>
+
+                    {% if page_context == 'home' and not source_movie_details %}
+                    <div class="mt-8 border-t border-gray-700 pt-6">
+                        <h2 class="text-xl font-bold mb-4 text-gray-300">Or Popular Genres</h2>
+                        <div class="flex flex-wrap justify-center gap-2 h-auto">
+                            {% for genre in all_genres %}
+                            <a href="/genre/{{ genre }}"
+                                class="px-3 py-1.5 bg-gray-900 text-indigo-200 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-200 text-xs font-bold border border-indigo-500/50 hover:border-indigo-500 shadow-sm uppercase tracking-wide transform hover:-translate-y-0.5">
+                                {{ genre | title }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+        {% endif %} 
+        
+        <section class="max-w-6xl mx-auto">
+            
+            {% if error %}
+            <div class="bg-red-900/80 border border-red-500 text-red-100 px-6 py-4 rounded-lg text-center mb-8 shadow-md backdrop-blur-sm">
+                <strong class="font-bold text-xl">Oops!</strong>
+                <span class="block sm:inline ml-2 text-lg">{{ error }}</span>
+            </div>
+            {% endif %}
+
+            {% if matches %}
+            <div class="bg-gray-800 p-8 rounded-lg shadow-xl mb-8 border border-gray-700">
+                <h3 class="text-2xl font-bold mb-5 text-indigo-300 text-center">Did you mean one of these?</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for match in matches %}
+                    
+                    {% if page_context == 'browse' %}
+                    <form action="/browse" method="post" class="w-full">
+                        <input type="hidden" name="person_name" value="{{ match }}">
+                    {% else %}
+                    <form action="/recommend" method="post" class="w-full">
+                        <input type="hidden" name="source_context" value="{{ page_context }}">
+                        <input type="hidden" name="movie_title" value="{{ match }}">
+                    {% endif %}
+                        
+                        <button type="submit"
+                            class="w-full text-left px-6 py-4 bg-gray-700 hover:bg-indigo-600 rounded-lg text-gray-200 transition duration-200 flex justify-between items-center group">
+                            <span class="text-lg font-medium">{{ match }}</span>
+                            <span class="opacity-0 group-hover:opacity-100 transition-opacity">➜</span>
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if source_movie_details %}
+            <div class="bg-gray-800 rounded-lg shadow-2xl mb-12 overflow-hidden border border-gray-700">
+                <div class="bg-indigo-900/50 p-6 border-b border-gray-700">
+                    <h2 class="text-4xl font-extrabold text-white">{{ source_movie_details.title }}</h2>
+                </div>
+                <div class="p-8">
+                    <div class="grid md:grid-cols-2 gap-6 mb-6 text-sm">
+                        <div>
+                            <span class="text-indigo-400 font-bold uppercase">Director:</span>
+                            {% for d in source_movie_details.director %}
+                                <a href="/browse?person_name={{ d }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ d }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <span class="text-indigo-400 font-bold uppercase">Cast:</span> 
+                            {% for c in source_movie_details.cast %}
+                                <a href="/browse?person_name={{ c }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ c }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-indigo-400 font-bold uppercase">Genres:</span> 
+                            {% for g in source_movie_details.genres %}
+                                <a href="/genre/{{ g }}" class="text-gray-300 hover:text-white hover:underline border-b border-dotted border-gray-500 hover:border-white transition-colors">{{ g|title }}</a>{{ ", " if not loop.last else "" }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-300 text-lg leading-relaxed">{{ source_movie_details.overview }}</p>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold mb-8 text-white text-center border-b-2 border-gray-700 pb-4">Recommended Movies</h3>
+            {% endif %}
+
+            {% if list_title %}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-700 pb-4 gap-4">
+                <h3 class="text-3xl font-bold text-white">{{ list_title }}</h3>
+                
+                {% if page_context == 'catalog' %}
+                <div class="relative">
+                    <button id="genreFilterBtn" class="px-4 py-2 bg-gray-700 text-gray-200 rounded hover:bg-indigo-600 hover:text-white flex items-center font-bold shadow-md transition-colors border border-gray-600 text-sm">
+                        Filter by Genre <span class="ml-2 text-[10px]">▼</span>
+                    </button>
+                    
+                    <div id="genreFilterMenu" class="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl py-2 hidden z-50 max-h-80 overflow-y-auto">
+                         <a href="/catalog" class="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-700 hover:text-white border-b border-gray-700">All Movies</a>
+                        {% for genre in all_genres %}
+                        <a href="/catalog/genre/{{ genre }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-indigo-600 hover:text-white transition-colors">
+                            {{ genre | title }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if recommendations_data %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                {% for movie in recommendations_data %}
+                <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 border border-gray-700 flex flex-col h-full group">
+                    <div class="p-6 flex-grow">
+                        <form action="/recommend" method="post">
+                             <input type="hidden" name="source_context" value="{{ page_context }}">
+                             <button type="submit" name="movie_title" value="{{ movie.title }}" 
+                                class="text-2xl font-bold text-indigo-400 mb-3 hover:text-indigo-300 text-left leading-tight group-hover:underline">
+                                {{ movie.title }}
+                             </button>
+                        </form>
+                        
+                        <div class="text-sm text-gray-500 mb-4 space-y-1">
+                            {% if movie.genres %}
+                            <div>
+                                <span class="text-gray-600 font-semibold">Genre:</span> 
+                                {% for g in movie.genres %}
+                                    <a href="/genre/{{ g }}" class="hover:text-indigo-400 hover:underline border-b border-dotted border-gray-600 hover:border-indigo-400 transition-colors">{{ g|title }}</a>{{ ", " if not loop.last else "" }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if movie.cast %}
+                            <div>
+                                <span class="text-gray-600 font-semibold">Cast:</span> 
+                                {% for c in movie.cast %}
+                                    <a href="/browse?person_name={{ c }}" class="hover:text-indigo-400 hover:underline border-b border-dotted border-gray-600 hover:border-indigo-400 transition-colors">{{ c }}</a>{{ ", " if not loop.last else "" }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="text-gray-400 mb-4 line-clamp-3 text-sm leading-relaxed">{{ movie.overview }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/50 p-4 border-t border-gray-700">
+                        <div class="flex flex-wrap gap-2">
+                             {% if movie.reason %}
+                                <span class="px-2 py-1 bg-green-900/40 text-green-400 text-xs font-bold rounded border border-green-800 uppercase tracking-wide">
+                                    {{ movie.reason }}
+                                </span>
+                            {% else %}
+                                <span class="text-xs text-gray-500 font-bold uppercase self-center mr-1">Match:</span>
+                                {% if movie.reason_director %} 
+                                    <span class="px-1.5 py-0.5 bg-purple-900/40 text-purple-400 text-[10px] font-bold rounded border border-purple-800">
+                                        Director: <a href="/browse?person_name={{ movie.reason_director[0] }}" class="hover:underline">{{ movie.reason_director[0] }}</a>
+                                    </span> 
+                                {% endif %}
+                                {% if movie.reason_cast %} <span class="px-1.5 py-0.5 bg-yellow-900/40 text-yellow-400 text-[10px] font-bold rounded border border-yellow-800">Cast</span> {% endif %}
+                                {% if movie.reason_genres %} <span class="px-1.5 py-0.5 bg-blue-900/40 text-blue-400 text-[10px] font-bold rounded border border-blue-800">Genre</span> {% endif %}
+                                {% if movie.reason_fallback %} <span class="px-1.5 py-0.5 bg-gray-700 text-gray-400 text-[10px] font-bold rounded border border-gray-600">Plot</span> {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if total_pages and total_pages > 1 %}
+            <div class="flex flex-wrap justify-center items-center mt-12 gap-4">
+                
+                <div class="flex items-center space-x-2">
+                    {% if current_page > 1 %}
+                    <a href="{{ pagination_base_url }}?page={{ current_page - 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition shadow-md">Prev</a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-gray-800 text-gray-600 rounded cursor-not-allowed border border-gray-700">Prev</span>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 text-gray-400 font-medium">
+                        Page <span class="text-white">{{ current_page }}</span> / {{ total_pages }}
+                    </span>
+                    
+                    {% if current_page < total_pages %}
+                    <a href="{{ pagination_base_url }}?page={{ current_page + 1 }}" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-indigo-600 transition shadow-md">Next</a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-gray-800 text-gray-600 rounded cursor-not-allowed border border-gray-700">Next</span>
+                    {% endif %}
+                </div>
+
+                <form action="{{ pagination_base_url }}" method="get" class="flex items-center space-x-2 bg-gray-800 p-1 rounded-lg border border-gray-700">
+                    <label for="page_jump" class="text-gray-400 text-sm pl-2">Go:</label>
+                    <input type="number" id="page_jump" name="page" min="1" max="{{ total_pages }}" 
+                           class="w-16 px-2 py-1 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:outline-none text-center text-sm placeholder-gray-500"
+                           placeholder="#">
+                    <button type="submit" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm font-bold hover:bg-indigo-500 transition shadow-sm">
+                        &rarr;
+                    </button>
+                </form>
+
+            </div>
+            {% endif %}
+            
+            {% endif %}
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('genreFilterBtn');
+            const menu = document.getElementById('genreFilterMenu');
+
+            if (btn && menu) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    menu.classList.toggle('hidden');
+                });
+
+                window.addEventListener('click', function(e) {
+                    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
